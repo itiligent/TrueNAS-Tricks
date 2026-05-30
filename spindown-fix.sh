@@ -66,16 +66,16 @@ show_help() {
   echo "  status         Show whether overlay files exist and whether each file"
   echo "                 is currently bind-mounted."
   echo
-  echo "  boot-script    Generate a single boot helper script and print the one"
+  echo "      Generate a single boot helper script and print the one"
   echo "                 TrueNAS Post Init command needed to run it at boot."
   echo
-  echo "  init-command   Show startup commmands for boot-script."
+  echo "  init-command   Show startup commmands for ."
   echo
   echo "Typical workflow:"
   echo "  sudo bash $0 copy"
   echo "  sudo bash $0 dry-run"
   echo "  sudo bash $0 apply"
-  echo "  sudo bash $0 boot-script"
+  echo "  sudo bash $0 "
 }
 
 require_root() {
@@ -347,7 +347,7 @@ if [[ -z "$MODE" ]]; then
 fi
 
 case "$MODE" in
-  copy|dry-run|apply|mount|unmount|status|boot-script|init-command)
+  copy|dry-run|apply|mount|unmount|status||init-command)
     ;;
   *)
     echo "ERROR: Invalid argument: $MODE"
@@ -414,8 +414,8 @@ case "$MODE" in
     echo "Patch applied, overlay files bind-mounted, and middlewared restarted."
     echo
     echo "Next step:"
-    echo "Generate the single Post Init boot helper command:"
-    echo "  sudo bash \"$SCRIPT_PATH\" boot-script"
+    echo "Generate the single Post Init boot mount command:"
+    echo "  sudo bash \"$SCRIPT_PATH\" init-command"
     ;;
 
   mount)
