@@ -15,14 +15,14 @@ clear
 # read-only system files untouched.
 #
 # The script can also generate a single boot helper 'script.spindown-overlay-mount.sh'
-# Add that helper as a TrueNAS Post Init command so the overlay is mounted at boot 
+# Add that helper as a TrueNAS Post Init command so the overlay is mounted at boot
 # and middlewared is restarted after the bind mounts are in place.
 
 MODE="${1:-}"
 
 # Location where patched overlay copies will be stored.
 # Keep this off spinning disks if possible.
-OVERLAY="/mnt/tank_pool/overlay"
+OVERLAY="/mnt/YOUR_SSD_POOL/overlay"
 
 # Resolve the real path of this script.
 SCRIPT_PATH="$(readlink -f "$0")"
@@ -66,16 +66,16 @@ show_help() {
   echo "  status         Show whether overlay files exist and whether each file"
   echo "                 is currently bind-mounted."
   echo
-  echo "      Generate a single boot helper script and print the one"
+  echo "  boot-script    Generate a single boot helper script and print the one"
   echo "                 TrueNAS Post Init command needed to run it at boot."
   echo
-  echo "  init-command   Show startup commmands for ."
+  echo "  init-command   Show startup commmands for boot-script."
   echo
   echo "Typical workflow:"
   echo "  sudo bash $0 copy"
   echo "  sudo bash $0 dry-run"
   echo "  sudo bash $0 apply"
-  echo "  sudo bash $0 "
+  echo "  sudo bash $0 boot-script"
 }
 
 require_root() {
@@ -260,7 +260,7 @@ BOOT_HEADER
 
     printf 'OVERLAY=%q\n' "$OVERLAY"
 
-    echo 'FILES=(' 
+    echo 'FILES=('
     for f in "${FILES[@]}"; do
       printf '  %q\n' "$f"
     done
@@ -347,7 +347,7 @@ if [[ -z "$MODE" ]]; then
 fi
 
 case "$MODE" in
-  copy|dry-run|apply|mount|unmount|status||init-command)
+  copy|dry-run|apply|mount|unmount|status|boot-script|init-command)
     ;;
   *)
     echo "ERROR: Invalid argument: $MODE"
