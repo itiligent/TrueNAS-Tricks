@@ -4,7 +4,7 @@
 
 **1. Place these files in the same TrueNAS directory eg. `/home/trunas_admin`:**
 ```bash
-spindown-overlay.sh
+spindown-fix.sh
 spindown.patch.fixed
 ```
 
