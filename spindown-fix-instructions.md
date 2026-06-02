@@ -8,7 +8,7 @@ spindown-fix.sh
 spindown.patch.fixed
 ```
 
-**2. Edit the script `OVERLAY` setting to your preferred TrueNAS path for the overlay: `nano spindown-overlay.sh`**
+**2. Edit the script `OVERLAY` setting to your preferred TrueNAS path for the overlay: `nano spindown-fix.sh`**
 ```bash
 OVERLAY="/mnt/your_preferred_ssd_tank/overlay"
 ```
@@ -16,7 +16,7 @@ Choose a location that is available at boot. This path must also be on a mounted
 
 **3. Make the script executable**
 ```bash
-chmod +x spindown-overlay.sh
+chmod +x spindown-fix.sh
 ```
 
 ## Running the script:
@@ -24,7 +24,7 @@ The script needs to be run several times with different arguments to complete al
 
 ### **1st Run Argument:**
 ```bash
-sudo bash ./spindown-overlay.sh copy
+sudo bash ./spindown-fix.sh copy
 ```
 
 This command:
@@ -33,7 +33,7 @@ This command:
 
 ### **2nd Run Argument:**
 ```bash
-sudo bash ./spindown-overlay.sh dry-run
+sudo bash ./spindown-fix.sh dry-run
 ```
 
 This command:
@@ -42,7 +42,7 @@ This command:
 
 ### **3rd Run Argument:**
 ```bash
-sudo bash ./spindown-overlay.sh apply
+sudo bash ./spindown-fix.sh apply
 ```
 
 This command:
@@ -55,14 +55,14 @@ After this step, TrueNAS should now be using the patched middleware files. (Thes
 
 ### **4th Run Argument:**
 ```bash
-sudo bash ./spindown-overlay.sh status
+sudo bash ./spindown-fix.sh status
 ```
 This command:
 - Helps to confirm that each overlay file exists and that each target file is currently bind-mounted.
 
 ### **5th Run Argument:**
 ```bash
-sudo bash ./spindown-overlay.sh init-command
+sudo bash ./spindown-fix.sh init-command
 ```
 This command:
 - Prints on screen the exact TrueNAS POST INIT command you will need to add to TrueNAS startup.
@@ -78,21 +78,21 @@ Timeout: 60 seconds or higher
 
 ### To temporarily Revert to original TrueNAS system files:
 ```bash
-sudo bash ./spindown-overlay.sh unmount
+sudo bash ./spindown-fix.sh unmount
 ```
 
 ### Recommended Workflow for Updating TrueNAS:
 
 1. Revert the system back to its original state by disabling the POST INIT boot command
 2. Reboot
-3. Check to make sure no overlays are present: `sudo bash ./spindown-overlay.sh status`
+3. Check to make sure no overlays are present: `sudo bash ./spindown-fix.sh status`
 4. Update TrueNAS
 5. Repeat the patching process to the updated TrueNAS system
 ```bash
-sudo bash ./spindown-overlay.sh copy
-sudo bash ./spindown-overlay.sh dry-run
-sudo bash ./spindown-overlay.sh apply
+sudo bash ./spindown-fix.sh copy
+sudo bash ./spindown-fix.sh dry-run
+sudo bash ./spindown-fix.sh apply
 ```
 6. Re-enable the POST INIT boot command
 7. Reboot
-8. Check to make sure the overlays are present `bash ./spindown-overlay.sh status`
+8. Check to make sure the overlays are present `bash ./spindown-fix.sh status`
