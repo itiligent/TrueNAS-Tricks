@@ -1,4 +1,6 @@
-# Itiligent fixed spindown patch (smartctl standby disk checks always parsed before the device path) 
+# TrueNAS v25 fixed spindown patch (smartctl standby disk checks always parsed before the device path) 
+# Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic job, and changes SMART alert polling to 360 minutes.
+# Create an overlay to mount and patch copies of the included system files with spindown-fix.sh
 --- /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py	2025-11-23 16:29:54.794377157 -0800
 +++ /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py	2025-11-23 16:30:39.314554054 -0800
 @@ -161,7 +161,7 @@
@@ -71,7 +73,7 @@
  class SMARTAlertSource(ThreadedAlertSource):
      run_on_backup_node = False
 -    schedule = IntervalSchedule(timedelta(minutes=90))
-+    schedule = IntervalSchedule(timedelta(minutes=300))
++    schedule = IntervalSchedule(timedelta(minutes=360))
  
      def parse_ata_smart_info(self, data: dict) -> SmartInfo:
          ue, test_failed, sbr, ec = 0, False, 0, 0
