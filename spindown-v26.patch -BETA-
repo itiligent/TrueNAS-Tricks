@@ -1,0 +1,93 @@
+# TrueNAS v26 hdd spindown patch from Itiligent
+# Preserves upstream changes; adds standby-aware smartctl/temp handling, maintains standby disk state, disables the encrypted-key sync periodic job, and changes SMART alert polling to 360 minutes as requested.
+# Create an overlay to mount and patch copies of the read only system files with spindown-fix.sh
+--- /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py
+@@ -155,7 +155,7 @@
+
+         return results
+
+-    @periodic(86400)
++    #@periodic(86400)
+     @private
+     @pass_thread_local_storage
+     @job(lock=lambda args: f'sync_encrypted_pool_dataset_keys_{args}')
+--- /usr/lib/python3/dist-packages/middlewared/utils/disks_/disk_class.py
++++ /usr/lib/python3/dist-packages/middlewared/utils/disks_/disk_class.py
+@@ -14,6 +14,7 @@
+
+ from .disk_io import read_gpt, wipe_disk_quick, create_gpt_partition
+ from .gpt_parts import GptPartEntry, PART_TYPES
++from middlewared.utils import MIDDLEWARE_RUN_DIR
+
+ logger = logging.getLogger(__name__)
+
+@@ -348,9 +349,11 @@
+         Returns:
+             dict | str: Parsed JSON dict if return_json=True, raw string otherwise.
+         """
+-        cmd = ["smartctl", "-x", self.devpath]
++        cmd = ["smartctl", "-n", "standby", "-x"]
+         if return_json:
+             cmd.extend(["-jc"])
++
++        cmd.append(self.devpath)
+
+         stdout = self.__run_smartctl_cmd_impl(cmd, raise_alert)
+         if return_json:
+@@ -384,6 +387,13 @@
+
+         temp_c: float | None = None
+         crit: float | None = None
++        try:
++            with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'r') as f:
++                if self.name in f.read().split(','):
++                    return TempEntry()
++        except Exception:
++            pass
++
+         try:
+             with os.scandir(path) as sdir:
+                 for i in filter(
+--- /usr/lib/python3/dist-packages/middlewared/alert/source/smart.py
++++ /usr/lib/python3/dist-packages/middlewared/alert/source/smart.py
+@@ -55,7 +55,7 @@
+
+ class SMARTAlertSource(ThreadedAlertSource):
+     run_on_backup_node = False
+-    schedule = IntervalSchedule(timedelta(minutes=90))
++    schedule = IntervalSchedule(timedelta(minutes=360))
+
+     def parse_ata_smart_info(self, data: dict) -> SmartInfo:
+         ue, test_failed, sbr, ec = 0, False, 0, 0
+--- /usr/lib/python3/dist-packages/middlewared/plugins/disk.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/disk.py
+@@ -4,7 +4,7 @@
+ )
+ from middlewared.service import filterable_api_method, private, CRUDService
+ import middlewared.sqlalchemy as sa
+-from middlewared.utils import ProductType
++from middlewared.utils import ProductType, MIDDLEWARE_RUN_DIR
+ from middlewared.utils.sed import sed_status
+
+
+@@ -247,6 +247,21 @@
+                 return
+             disk = disk[0]
+
++        try:
++            with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'r') as f:
++                standby_disks = [d for d in f.read().split(',') if d]
++        except Exception:
++            standby_disks = []
++
++        if disk['hddstandby'] == 'ALWAYS ON' and dev in standby_disks:
++            standby_disks.remove(dev)
++        elif disk['hddstandby'] != 'ALWAYS ON' and dev not in standby_disks:
++            standby_disks.append(dev)
++            standby_disks.sort()
++
++        with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'w') as f:
++            f.write(','.join(standby_disks))
++
+         return await self.middleware.call('disk.power_management_impl', dev, disk)
