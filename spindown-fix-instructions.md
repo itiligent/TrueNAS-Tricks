@@ -17,16 +17,22 @@ spindown-v25.patch or spindown-v26.patch
 
 ---
 
-### 2. Edit the script `OVERLAY=` setting to your preferred TrueNAS path for the file overlays
+### 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
+
 
 ```bash
 nano spindown-fix.sh
 ```
 
-Choose a location that is available at boot. This path must also be on a mounted SSD pool.
+Choose an overaly location that is available at boot. This path must be on an SSD pool.
 
 ```bash
 OVERLAY="/mnt/your_preferred_ssd_tank/overlay"
+```
+
+Configure the script to use the correct patch version: 
+```bash
+PATCH="$SCRIPT_DIR/spindown-[version].patch"
 ```
 
 ---
