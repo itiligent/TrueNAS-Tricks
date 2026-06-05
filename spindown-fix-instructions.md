@@ -181,7 +181,7 @@ sudo bash ./spindown-fix.sh unmount
 5. Repeat the patching process for the updated TrueNAS system
 > [!NOTE]
 > If you have performed a major TrueNAS version upgrade, you must 
-> download the new version patch and then modify `PATCH=` setting in `spindown-fix.sh` and any other above patch customisations 
+> download the new version patch and then modify `PATCH=` setting in `spindown-fix.sh` plus re-do any above patch customisations. 
  
  ```bash
 PATCH="$SCRIPT_DIR/spindown-[verion].patch"
