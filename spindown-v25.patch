@@ -1,5 +1,8 @@
-# TrueNAS v25 fixed spindown patch (smartctl standby disk checks always parsed before the device path) 
-# Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic job, and changes SMART alert polling to 360 minutes.
+# TrueNAS v25 spindown patch 
+# Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic jobs,
+# and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to 
+# prevent SMART polling from touching the disk before it reaches standby and restarting the standby timer).
+
 # Create an overlay to mount and patch copies of the included system files with spindown-fix.sh
 --- /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py	2025-11-23 16:29:54.794377157 -0800
 +++ /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py	2025-11-23 16:30:39.314554054 -0800
