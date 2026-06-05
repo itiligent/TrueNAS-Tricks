@@ -21,7 +21,7 @@ The patch ensures that SMART will only ever poll awake disks.
 > 
 > Increasing this interval increases SMART telemetry latency. Health, temperature, and alert updates may take up to the maximum interval to appear.
 >
-> This inteval can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  TrueNAS default is **90 minutes** which is likely a main cause of complaints of disks regularly being awoken for background tasks.
+> This interval can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  TrueNAS default is **90 minutes** which is likely a main cause of complaints of disks regularly being awoken for background tasks.
 
 
 
