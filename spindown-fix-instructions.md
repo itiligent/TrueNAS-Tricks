@@ -107,12 +107,10 @@ This command:
 * Bind-mounts the patched overlay files over the native TrueNAS system files.
 * Restarts `middlewared`
 
-After this step, TrueNAS should now be using the patched middleware files. 
-
 > [!NOTE]
-> These settings will not yet remain after a reboot, boot persitence
-> is configured in a following step.
-
+> After this step, TrueNAS should be using the patched middleware files.
+> This change is not yet persistent across reboots.
+> Boot persistence is configured in a later step.
 ---
 
 ### 4th Run Argument
@@ -135,10 +133,10 @@ sudo bash ./spindown-fix.sh boot-script
 
 This command:
 
-* Creates a custom script in the current directory to mount the new overalys at boot.
-* Prints on screen the exact TrueNAS command you will need to call the newly created Init script.
+* Creates a custom boot script to mount the new overalys at on startup.
+* Prints on screen the exact TrueNAS init command you will need to call the newly created boot script.
 
-Next, add the provided Init command under **System | Advanced Settings | Init/Shutdown scripts** with these additional settings:
+Next, add the provided init command under **System | Advanced Settings | Init/Shutdown scripts** with these additional settings:
 
 ```text
 Type: Command
@@ -149,8 +147,8 @@ Timeout: 60 seconds or higher
 
 > [!NOTE]
 > Note: On some systems, the overlays may not mount quickly enough during boot requiring a middleware restart, but this can clobber app services if done during startup.
->
-> If after boot `sudo bash spindown-fix.sh status` shows the overlays is did not mount, or if the apps service is not running after boot, run the Pre Init boot script with a delayed middleware restart:
+> 
+> If `sudo bash spindown-fix.sh status` shows the overlays is did not mount at boot, or if the apps service is not running after boot, run the boot script with a delayed middleware restart:
 >
 > ```bash
 > ENABLE_DELAYED_RESTART=yes DELAY_SECONDS=300 bash /path/to/spindown-overlay-mount.sh
