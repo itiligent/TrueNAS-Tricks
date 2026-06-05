@@ -1,31 +1,54 @@
-# TrueNAS Spindown Fix Script Instructions
+# TrueNAS Spindown-Fix Script Instructions
 
-## Preparing the Script
+### 1. Preparing the script
 
-### 1. Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
+Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
 
 ```bash
 spindown-fix.sh
 spindown-v25.patch or spindown-v26.patch
 ```
+---
 
+#### 1.1. Optional: Tune the SMART polling interval
 
+The patch ensures that SMART will only ever poll awake disks.
 
 > [!NOTE]
-> Note: If your TrueNAS system uses ZFS dataset encryption, you must follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
+> If your HDD standby timeout is **6 hours or longer**, you must increase the  SMART polling `IntervalSchedule` of  `360` minutes set by the patch.
+> 
+> (If SMART polling hits an awake disk before it can reach standby, it resets the standby timer prevents the disk from ever sleeping).
+> 
+> Increasing this interval increases SMART telemetry latency. Health, temperature, and alert updates may take up to the maximum interval to appear.
+>
+> This inteval can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  TrueNAS default is **90 minutes** which is likely a main cause of complaints of disks regularly being awoken for background tasks.
 
+
+
+```bash
+nano spindown-[version].patch
+```
+
+Look for this line and edit:
+```bash
+schedule = IntervalSchedule(timedelta(minutes=numeric_value_in_minutes))
+```
+
+#### 1.2. Only If Using ZFS Encryption 
+
+> [!Warning]
+> Certain ZFS encryption periodically wake disks, but the patch disables these tasks. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
 
 ---
 
-### 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
 
+### 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
 
 ```bash
 nano spindown-fix.sh
 ```
 
 Choose an overaly location that is available at boot. This path must be on an SSD pool.
-
 ```bash
 OVERLAY="/mnt/your_preferred_ssd_tank/overlay"
 ```
@@ -34,15 +57,12 @@ Configure the script to use the correct patch version:
 ```bash
 PATCH="$SCRIPT_DIR/spindown-[version].patch"
 ```
-
 ---
 
 ### 3. Make the script executable
-
 ```bash
 chmod +x spindown-fix.sh
 ```
-
 ---
 
 ## Running the Script
