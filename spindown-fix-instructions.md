@@ -37,7 +37,7 @@ schedule = IntervalSchedule(timedelta(minutes=numeric_value_in_minutes))
 #### 1.2. Only If Using ZFS Encryption 
 
 > [!Warning]
-> Certain ZFS encryption periodically wake disks, but the patch disables these tasks. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
+> Certain ZFS encryption tasks periodically wake disks, but the patch disables these. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
 
 ---
 
