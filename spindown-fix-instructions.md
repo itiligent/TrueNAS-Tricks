@@ -9,6 +9,12 @@ spindown-fix.sh
 spindown-v25.patch or spindown-v26.patch
 ```
 
+
+
+> [!NOTE]
+> Note: If your TrueNAS system uses ZFS dataset encryption, you must follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
+
+
 ---
 
 ### 2. Edit the script `OVERLAY=` setting to your preferred TrueNAS path for the file overlays
@@ -105,7 +111,7 @@ sudo bash ./spindown-fix.sh boot-script
 
 This command:
 
-* Creates in the current directory an Init script to mount the overaly at boot.
+* Creates a custom script in the current directory to mount the new overalys at boot.
 * Prints on screen the exact TrueNAS command you will need to call the newly created Init script.
 
 Next, add the provided Init command under **System | Advanced Settings | Init/Shutdown scripts** with these additional settings:
