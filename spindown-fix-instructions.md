@@ -23,8 +23,6 @@ The patch ensures that SMART will only ever poll awake disks.
 >
 > This interval can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  The TrueNAS default is **90 minutes** which is likely a main cause of complaints of disks regularly being awoken for background tasks.
 
-
-
 ```bash
 nano spindown-[version].patch
 ```
@@ -34,8 +32,8 @@ Look for this line and edit:
 schedule = IntervalSchedule(timedelta(minutes=numeric_value_in_minutes))
 ```
 
-#### 1.2. Only If Using ZFS Encryption 
 
+#### 1.2. Only If Using ZFS Encryption 
 > [!Warning]
 > Certain ZFS encryption tasks periodically wake disks, but the patch disables these. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
 
