@@ -15,13 +15,17 @@ spindown-v25.patch or spindown-v26.patch
 The patch ensures that SMART will only ever poll awake disks.
 
 > [!NOTE]
-> If your HDD standby timeout is **6 hours or longer**, you must increase the  SMART polling `IntervalSchedule` of  `360` minutes set by the patch.
+> If your HDD standby timeout is **6 hours or longer**, you must increase the  SMART polling `IntervalSchedule` of  `360` minutes set by the patch. 
 > 
-> (If SMART polling hits an awake disk before it can reach standby, it resets the standby timer prevents the disk from ever sleeping).
-> 
-> Increasing this interval increases SMART telemetry latency. Health, temperature, and alert updates may take up to the maximum interval to appear.
+> Why?
 >
-> This interval can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  The TrueNAS default is **90 minutes**, a main cause of disks regularly being awoken/kept awake by background tasks.
+> If SMART polling hits an awake disk before it reaches standby, it resets the standby timer and prevents the disk from ever sleeping.
+> 
+> Be aware that increasing this polling interval increases SMART telemetry latency. Health, temperature, and alert updates may take up to the maximum interval to appear, so keep this interval set to something sensible.
+>
+> The 6 hour SMART polling interval set by the patch is just a general suggestion. It can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  The TrueNAS default is **90 minutes**, a main cause of disks regularly being awoken/kept awake by background tasks.
+> 
+> Tip: Always set the SMART polling interval at least 15mins greater than your HDD standby timout as TrueNAS schedules tend to be inexact.   
 
 ```bash
 nano spindown-[version].patch
