@@ -35,7 +35,7 @@ Built-in profiles allow different levels of capture detail, from lower-noise mon
 
 ## 📧 TrueNAS Email SMART Reports
 
-TrueNAS middleware can be limited when sending large email reports. `smart-report.py` works around this by creating comprehensive disk health reports from `smartctl` output and sending them via Python using the TrueNAS API.
+The maximum size of email messages from TrueNAS middleware is too limited to send detailed SMART reports. `smart-report.py` works around this by creating comprehensive disk health reports from `smartctl` output and sending them via Python using the TrueNAS API.
 
 The included companion script, `smart-report-api-key-setup.sh`, helps install a GUI-generated TrueNAS API key that the python script will call.
 
