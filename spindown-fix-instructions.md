@@ -1,6 +1,6 @@
 # TrueNAS Spindown-Fix Script Instructions
 
-### 1. Preparing the script
+## 1. Preparing the script
 
 Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
 
@@ -10,7 +10,7 @@ spindown-v25.patch or spindown-v26.patch
 ```
 ---
 
-#### 1.1. Optional: Tune the SMART polling interval
+### 1.1. Optional: Tune the SMART polling interval
 
 The patch ensures that SMART will only ever poll awake disks.
 
@@ -37,14 +37,14 @@ schedule = IntervalSchedule(timedelta(minutes=numeric_value_in_minutes))
 ```
 
 
-#### 1.2. Only If Using ZFS Encryption 
+### 1.2. Only If Using ZFS Encryption 
 > [!Warning]
 > Certain ZFS encryption tasks must periodically wake disks, but the patch disables these. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) to re-enable these tasks before proceeding further.
 
 ---
 
 
-### 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
+## 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
 
 ```bash
 nano spindown-fix.sh
@@ -61,7 +61,7 @@ PATCH="$SCRIPT_DIR/spindown-[version].patch"
 ```
 ---
 
-### 3. Make the script executable
+## 3. Make the script executable
 ```bash
 chmod +x spindown-fix.sh
 ```
