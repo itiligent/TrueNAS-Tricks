@@ -67,7 +67,7 @@ chmod +x spindown-fix.sh
 ```
 ---
 
-## Running the Script
+## 4. Running the Script
 
 The script needs to be run several times with different arguments to complete all the configuration stages in sequence.
 
