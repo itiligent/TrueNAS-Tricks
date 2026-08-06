@@ -1,6 +1,6 @@
-# TrueNAS v25 spindown patch 
+# TrueNAS v25 spindown patch
 # Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic jobs,
-# and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to 
+# and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to
 # prevent SMART polling from touching the disk before it reaches standby and restarting the standby timer).
 
 # Create an overlay to mount and patch copies of the included system files with spindown-fix.sh
@@ -54,7 +54,7 @@
  
      def smartctl_test(
          self, ttype: typing.Literal["long", "short", "offline", "conveyance"], raise_alert: bool = True
-@@ -352,6 +357,14 @@
+@@ -352,6 +357,28 @@
              path = f"{base}/device/hwmon"
  
          rv = {"temp_c": None, "crit": None}
@@ -63,7 +63,21 @@
 +            with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'r') as file:
 +                if self.name in file.read().split(','):
 +                    return TempEntry(**rv)
-+        except:
++        except FileNotFoundError:
++            # The standby_disks state file is written by plugins/disk.py during
++            # disk.power_management. On some releases (observed on 25.10.4 and
++            # 25.10.5) it is absent at runtime, so the guard above never fires
++            # and temp1_input is read on every poll. Each read issues a command
++            # to the disk and restarts its idle timer, so a rotational disk
++            # never reaches standby. Skip temperature reads for rotational
++            # disks in that case; SSD/NVMe temperatures are unaffected.
++            try:
++                with open(f"/sys/block/{self.name}/queue/rotational") as rot:
++                    if rot.read().strip() == "1":
++                        return TempEntry(**rv)
++            except Exception:
++                pass
++        except Exception:
 +            pass
 +
          try:
@@ -111,4 +125,4 @@
 +            file.write(','.join(disk_list))
  
          return await self.middleware.call('disk.power_management_impl', dev, disk)
- 
+
