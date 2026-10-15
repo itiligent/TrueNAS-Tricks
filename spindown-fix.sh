@@ -42,6 +42,7 @@ FILES=(
   "/usr/lib/python3/dist-packages/middlewared/utils/disks_/disk_class.py"
   "/usr/lib/python3/dist-packages/middlewared/alert/source/smart.py"
   "/usr/lib/python3/dist-packages/middlewared/plugins/disk.py"
+  "/usr/lib/python3/dist-packages/middlewared/plugins/ipmi.py"
 )
 
 usage() {

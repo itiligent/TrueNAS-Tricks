@@ -1,6 +1,6 @@
 # TrueNAS v27 hdd spindown patch from Itiligent
 # Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic jobs,
-# and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to 
+# makes the openipmi service start non-fatal when the unit is missing, and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to 
 # prevent SMART polling from touching the disk before it reaches standby and restarting the standby timer).
 
 --- /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py
@@ -88,3 +88,25 @@
 +        with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'w') as f:
 +            f.write(','.join(standby_disks))
 +
+--- /usr/lib/python3/dist-packages/middlewared/plugins/ipmi.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/ipmi.py
+@@ -3,6 +3,7 @@
+ from middlewared.api import api_method
+ from middlewared.api.current import IPMIIsLoadedArgs, IPMIIsLoadedResult
+ from middlewared.service import Service
++from middlewared.service_exception import CallError
+ 
+ 
+ class IPMIService(Service):
+@@ -26,4 +27,10 @@
+         # BMC device, it always reports as a failure which is expected since no IPMI device exists. Instead
+         # we check to see if dmidecode reports an ipmi device via type "38" of the SMBIOS spec. It's not
+         # fool-proof but it's the best we got atm.
+-        await (await middleware.call('service.control', 'START', 'openipmi')).wait(raise_error=True)
++        try:
++            await (await middleware.call('service.control', 'START', 'openipmi')).wait(raise_error=True)
++        except CallError as e:
++            # On restart, system.ready is already True so we reach this path even when openipmi.service
++            # is not installed (e.g. non-IPMI hardware). Treat a missing unit as a non-fatal condition.
++            if 'NoSuchUnit' not in str(e):
++                raise
