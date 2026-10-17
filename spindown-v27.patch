@@ -1,0 +1,112 @@
+# TrueNAS v27 hdd spindown patch from Itiligent
+# Adds standby-aware smartctl/hdd temp handling, maintains standby disk state, disables the encrypted-key sync periodic jobs,
+# makes the openipmi service start non-fatal when the unit is missing, and changes SMART alert checks to 360 minutes. (Always set this value higher than your preferred HDD standby timeout to 
+# prevent SMART polling from touching the disk before it reaches standby and restarting the standby timer).
+
+--- /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/pool_/dataset_encryption_info.py
+@@ -155,7 +155,7 @@
+ 
+         return results
+ 
+-    @periodic(86400)
++    #@periodic(86400)
+     @private
+     @pass_thread_local_storage
+     @job(lock=lambda args: f'sync_encrypted_pool_dataset_keys_{args}')
+--- /usr/lib/python3/dist-packages/middlewared/utils/disks_/disk_class.py
++++ /usr/lib/python3/dist-packages/middlewared/utils/disks_/disk_class.py
+@@ -14,6 +14,7 @@
+ 
+ from .disk_io import read_gpt, wipe_disk_quick, create_gpt_partition
+ from .gpt_parts import GptPartEntry, PART_TYPES
++from middlewared.utils import MIDDLEWARE_RUN_DIR
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -366,9 +367,11 @@
+         Returns:
+             dict | str: Parsed JSON dict if return_json=True, raw string otherwise.
+         """
+-        cmd = ["smartctl", "-x", self.devpath]
++        cmd = ["smartctl", "-n", "standby", "-x"]
+         if return_json:
+             cmd.extend(["-jc"])
++
++        cmd.append(self.devpath)
+ 
+         stdout = self.__run_smartctl_cmd_impl(cmd, raise_alert)
+         if return_json:
+@@ -400,6 +403,13 @@
+ 
+         temp_c: float | None = None
+         crit: float | None = None
++        try:
++            with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'r') as f:
++                if self.name in f.read().split(','):
++                    return TempEntry()
++        except Exception:
++            pass
++
+         try:
+             with os.scandir(path) as sdir:
+                 for i in filter(
+--- /usr/lib/python3/dist-packages/middlewared/alert/source/smart.py
++++ /usr/lib/python3/dist-packages/middlewared/alert/source/smart.py
+@@ -55,7 +55,7 @@
+ 
+ class SMARTAlertSource(ThreadedAlertSource):
+     run_on_backup_node = False
+-    schedule = IntervalSchedule(timedelta(minutes=90))
++    schedule = IntervalSchedule(timedelta(minutes=360))
+ 
+     def parse_ata_smart_info(self, data: dict) -> SmartInfo:
+         ue, test_failed, sbr, ec = 0, False, 0, 0
+--- /usr/lib/python3/dist-packages/middlewared/plugins/disk.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/disk.py
+@@ -9,6 +9,7 @@
+ from middlewared.service import filterable_api_method, private, CRUDService, ValidationError
+ import middlewared.sqlalchemy as sa
+ from middlewared.utils.disks_.disk_class import DiskEntry as DiskEntryObj
++from middlewared.utils import MIDDLEWARE_RUN_DIR
+ from middlewared.utils.hardware import get_hardware_class
+ 
+ 
+@@ -262,0 +263,15 @@
++        try:
++            with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'r') as f:
++                standby_disks = [d for d in f.read().split(',') if d]
++        except Exception:
++            standby_disks = []
++
++        if disk['hddstandby'] == 'ALWAYS ON' and dev in standby_disks:
++            standby_disks.remove(dev)
++        elif disk['hddstandby'] != 'ALWAYS ON' and dev not in standby_disks:
++            standby_disks.append(dev)
++            standby_disks.sort()
++
++        with open(f'{MIDDLEWARE_RUN_DIR}/standby_disks', 'w') as f:
++            f.write(','.join(standby_disks))
++
+--- /usr/lib/python3/dist-packages/middlewared/plugins/ipmi.py
++++ /usr/lib/python3/dist-packages/middlewared/plugins/ipmi.py
+@@ -3,6 +3,7 @@
+ from middlewared.api import api_method
+ from middlewared.api.current import IPMIIsLoadedArgs, IPMIIsLoadedResult
+ from middlewared.service import Service
++from middlewared.service_exception import CallError
+ 
+ 
+ class IPMIService(Service):
+@@ -26,4 +27,10 @@
+         # BMC device, it always reports as a failure which is expected since no IPMI device exists. Instead
+         # we check to see if dmidecode reports an ipmi device via type "38" of the SMBIOS spec. It's not
+         # fool-proof but it's the best we got atm.
+-        await (await middleware.call('service.control', 'START', 'openipmi')).wait(raise_error=True)
++        try:
++            await (await middleware.call('service.control', 'START', 'openipmi')).wait(raise_error=True)
++        except CallError as e:
++            # On restart, system.ready is already True so we reach this path even when openipmi.service
++            # is not installed (e.g. non-IPMI hardware). Treat a missing unit as a non-fatal condition.
++            if 'NoSuchUnit' not in str(e):
++                raise

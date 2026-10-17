@@ -6,7 +6,9 @@ Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
 
 ```bash
 spindown-fix.sh
-spindown-v25.patch or spindown-v26.patch
+spindown-v25.patch  # TrueNAS v25
+spindown-v26.patch  # TrueNAS v26
+spindown-v27.patch  # TrueNAS v27 (formerly v26 RC1)
 ```
 ---
 
@@ -184,11 +186,14 @@ sudo bash ./spindown-fix.sh unmount
 
 5. Repeat the patching process for the updated TrueNAS system
 > [!NOTE]
-> If you have performed a major TrueNAS version upgrade, you must 
-> download the new version patch and then modify `PATCH=` setting in `spindown-fix.sh` plus re-do any above patch customisations. 
+> If you have performed a major TrueNAS version upgrade, you must
+> download the new version patch and then modify `PATCH=` setting in `spindown-fix.sh` plus re-do any above patch customisations.
  
  ```bash
-PATCH="$SCRIPT_DIR/spindown-[verion].patch"
+PATCH="$SCRIPT_DIR/spindown-[version].patch"
+# TrueNAS v25 -> spindown-v25.patch
+# TrueNAS v26 -> spindown-v26.patch
+# TrueNAS v27 -> spindown-v27.patch
 ```
 
    ```bash
